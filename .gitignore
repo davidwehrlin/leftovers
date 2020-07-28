@@ -127,3 +127,12 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# Visual studio code
+.vscode/
+
+# Leftover-list.pdf
+leftover-list.pdf
+
+# AWS Lambda Layer
+lambda-layers/
