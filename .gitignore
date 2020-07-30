@@ -133,6 +133,3 @@ dmypy.json
 
 # Leftover-list.pdf
 leftover-list.pdf
-
-# AWS Lambda Layer
-lambda-layers/

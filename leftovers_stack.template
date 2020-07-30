@@ -1,0 +1,65 @@
+{
+    "AWSTemplateFormatVersion": "2010-09-09",
+    "Description": "Stack to create a lambda function",
+    "Parameters": {
+        "ToPhone": {
+            "Type" : "String"
+        },
+        "ToAddress": {
+            "Type" : "String"
+        },
+        "QueryString": {
+            "Type" : "String"
+        },
+        "FromPassword": {
+            "Type" : "String"
+        },
+        "TwilioAuth": {
+            "Type" : "String"
+        }
+    },
+    "Resources": {
+        "LeftoversFunction": {
+            "Type" : "AWS::Lambda::Function",
+            "Properties" : {
+                "Code" : {
+                    "S3Bucket": "leftovers.function",
+                    "S3Key": "code/lambda-code-v1.zip"
+                },
+                "Environment" : {
+                    "Variables": {
+                        "FROM_ADDRESS": "tag.leftovers@gmail.com",
+                        "FROM_PASSWORD": {"Ref": "FromPassword"},
+                        "FROM_PHONE": "+12565790437",
+                        "TWILIO_SID": "AC376c7029d3176ed56fa8fc5285a5aaf5",
+                        "TWILIO_AUTH": {"Ref": "TwilioAuth"},
+                        "TO_PHONE": {"Ref": "ToPhone"},
+                        "TO_ADDRESS": {"Ref": "ToAddress"},
+                        "QUERY_STRING": {"Ref": "QueryString"}
+                    }
+                },
+                "Handler" : "leftovers.function",
+                "Layers" : [],
+                "Role" : "arn:aws:iam::160854019388:role/leftovers-role",
+                "Runtime" : "python3.8",
+                "Timeout" : 60
+            }
+        },
+        "LeftoversTrigger": {
+            "Type": "AWS::Events::Rule",
+            "Properties": {
+                "Name": "leftovers-trigger",
+                "Description": "Timer trigger for leftovers function",
+                "ScheduleExpression": "cron(2/5 15-23 ? * TUE-FRI *)",
+                "Targets": [{
+                    "Id": "LeftoverFunction",
+                    "Arn": {
+                        "Fn::GetAtt": [ "LeftoversFunction", "Arn" ]
+                    }
+                }],
+                "State": "ENABLED"
+            }
+        }
+    }
+}
+  
