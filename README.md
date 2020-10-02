@@ -3,10 +3,14 @@
 Alert System for Colorado Department of Wildlife's Leftover Dear/Elk Tags
 Uses Amazon Web Services to create a simple notificaion service
 Files
-    * code.zip- The code that should be imported into lambda function
-    * layer.zip- The layer/libraries that should be imported into lambda function
-    * leftovers.py- The lambda function which performs the service
-    * leftovers_stack.template- The CloudFormation template used to create lambda function
+    * aws/twilio-layer.zip- The layer for AWS lambda
+    * docker/Dockerfile- The docker file which creates the image used in timer service
+    * docker/crontab- The specific times that the leftover tag service is up and running
+    * docker/script.sh- The script that gets run everytime the timer triggers
+    * docker/build.sh- builds a local image of the docker container
+    * docker/run.sh- runs the docker container locally
+    * docker/clean.sh- cleans up the docker container from your docker service
+    * leftovers.py- The lambda function which performs the notification service
     * LICENSE- MIT license which makes this open source
 
 # Prerequisites
