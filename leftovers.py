@@ -1,63 +1,51 @@
-import json
+'''
+Name: leftovers.py
+Description: lambda function for finding query strings in input and sending
+    emails when query is found.
+Author: David J Wehrlin
+Exceptions:
+    EmailAuthenticationFailed: failed authentication to gmail email
+Functions:
+    lambda_handler: handles lambda http input and maybe sends email if query
+        found in input string.
+'''
+from twilio.rest import Client
+import base64
 import os
 import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
-from time import time
-
-import pdfplumber
-import requests
-from twilio.rest import Client
 
 
-def function(event, context):
-
-    # DOWNLOADS PDF FILE
-    print("Downloading PDF")
-    start = time()
-    url = "https://cpw.state.co.us/Documents/Leftover.pdf"
-    response = requests.get(url, allow_redirects=True)
-    with open("/tmp/leftover-list.pdf", "wb") as f:
-        for chunk in response.iter_content(1024):
-            f.write(chunk)
-    print(f"Time to Download: {time() - start}")
-
-    # Analyzing PDF for Query Results
-    print("Analyzing PDF ...")
-    start = time()
-    isIncluded = False
-    with pdfplumber.open("/tmp/leftover-list.pdf") as f:
-        i = 0
-        for page in f.pages:
-            i += 1
-            print(f"Extracting Page {i}")
-            s = page.extract_text()
-            if (s.find(os.environ["QUERY_STRING"]) != -1):
-                print("Found Query String in PDF!!!")
-                isIncluded = True
-                break
-    print(f"Time to Analyze: {time() - start}")
-
-    if (isIncluded):
-        print("Sending Email Message ...")
-        start = time()
-        # The mail addresses and password
+def lambda_handler(event, context):
+    '''Takes in an byte array and convets to string, then checks for queries in
+    string and sends email if a query is found.'''
+    if event is None or context is None:
+        raise ValueError("Event or context is None")
+    string = str(base64.b64decode(event['body']))
+    found_queries = []
+    for query in os.environ['QUERY_LIST'].split(','):
+        if string.find(query) != -1:
+            found_queries.append(query)
+    # If query found then send email
+    if len(found_queries) > 0:
         from_address = os.environ["FROM_ADDRESS"]
         from_password = os.environ["FROM_PASSWORD"]
         to_address = os.environ["TO_ADDRESS"]
-        # Setup the MIME
         message = MIMEMultipart()
         message['From'] = from_address
         message['To'] = to_address
-        # The subject line
-        message['Subject'] = f'Leftover Tag Found {os.environ["QUERY_STRING"]}'
-        # The body and the attachments for the mail
-        message.attach(MIMEText(f"https://www.cpwshop.com/licensing.page"))
-        # Create SMTP session for sending the mail
+        subject = ""
+        for query in found_queries:
+            subject += query
+            subject += " "
+        message['Subject'] = 'Leftover Tag Found: ' + subject
+        message.attach(MIMEText("https://www.cpwshop.com/licensing.page\n"))
+        for query in found_queries:
+            message.attach(MIMEText(f"{query}\n"))
         session = smtplib.SMTP('smtp.gmail.com', 587)  # use gmail with port
         session.starttls()  # enable security
         try:
-            # login with mail_id and password
             session.login(from_address, from_password)
             text = message.as_string()
             session.sendmail(from_address, to_address, text)
@@ -66,23 +54,25 @@ def function(event, context):
             raise
         finally:
             session.quit()
-        print(f"Time to Send Email Message: {time() - start}")
 
-        print("Sending Text Message ...")
-        start = time()
-        client = Client(os.environ["TWILIO_SID"], os.environ["TWILIO_AUTH"])
-        try:
-            client.messages.create(
-                body=f'Leftover Tag Found {os.environ["QUERY_STRING"]} \nhttps://www.cpwshop.com/licensing.page',
-                from_=os.environ["FROM_PHONE"],
-                to=os.environ["TO_PHONE"]
-            )
-        except:
-            print('Error Sending Text Message')
-            raise
-        print(f"Time to Send Text Message: {time() - start}")
-
+        account_sid = os.environ['TWILIO_SID']
+        auth_token = os.environ['TWILIO_AUTH']
+        client = Client(account_sid, auth_token)
+        body = ""
+        for query in found_queries:
+            body += query
+            body += "\n"
+        message = client.messages \
+                        .create(
+                            body="https://www.cpwshop.com/licensing.page\nQuery found\n" + body,
+                            from_=str(os.environ['FROM_PHONE']),
+                            to=str(os.environ['TO_PHONE'])
+                        )
+        return {
+            'statusCode': 200,
+            'body': "\nQuery Found!\n"
+        }
     return {
-        'statusCode': 200,
-        'body': json.dumps('Successfully handled timer event!')
+        'statusCode': 404,
+        'body': "\nNot Found!\n"
     }
