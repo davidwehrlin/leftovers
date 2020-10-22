@@ -3,15 +3,15 @@
 Alert System for Colorado Department of Wildlife's Leftover Dear/Elk Tags
 Uses Amazon Web Services to create a simple notificaion service
 Files
-    * aws/twilio-layer.zip- The layer for AWS lambda
-    * docker/Dockerfile- The docker file which creates the image used in timer service
-    * docker/crontab- The specific times that the leftover tag service is up and running
-    * docker/script.sh- The script that gets run everytime the timer triggers
-    * docker/build.sh- builds a local image of the docker container
-    * docker/run.sh- runs the docker container locally
-    * docker/clean.sh- cleans up the docker container from your docker service
-    * leftovers.py- The lambda function which performs the notification service
-    * LICENSE- MIT license which makes this open source
+* aws/twilio-layer.zip- The layer for AWS lambda
+* docker/Dockerfile- The docker file which creates the image used in timer service
+* docker/crontab- The specific times that the leftover tag service is up and running
+* docker/script.sh- The script that gets run everytime the timer triggers
+* docker/build.sh- builds a local image of the docker container
+* docker/run.sh- runs the docker container locally
+* docker/clean.sh- cleans up the docker container from your docker service
+* leftovers.py- The lambda function which performs the notification service
+* LICENSE- MIT license which makes this open source
 
 # Prerequisites
 Docker, AWS, Gmail, Twilio, Max of $15 a month to run this.
